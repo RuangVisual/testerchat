@@ -1,15 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-
-    
 <head>
     <meta charset="UTF-8">
-    <title>Ruang Visual Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Visual Chat Overlay</title>
 
-    <!-- CSS KAMU SENDIRI -->
+    <!-- FONT -->
     <link rel="stylesheet"
-          href="https://raw.githubusercontent.com/RuangVisual/testerchat/main/style.css">
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 
+    <!-- SS Ninja helper -->
+    <script src="https://socialstream.ninja/libs/colours.js"></script>
+
+    <!-- 🔥 CSS INJECTION LOGIC (INI KUNCINYA) -->
+    <script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("css")) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.type = "text/css";
+            link.href = params.get("css");
+            document.head.appendChild(link);
+            console.log("External CSS loaded:", link.href);
+        }
+    })();
+    </script>
+
+    <!-- DEFAULT STYLE (boleh minimal, akan dioverride CSS GitHub) -->
     <style>
         html, body {
             margin: 0;
@@ -18,30 +36,21 @@
             height: 100%;
             background: transparent;
             overflow: hidden;
+            font-family: 'Inter', sans-serif;
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-        <script>
-const params = new URLSearchParams(window.location.search);
-if (params.has("css")) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = params.get("css");
-    document.head.appendChild(link);
-}
-</script>
-
     </style>
 </head>
 <body>
 
+<!-- 🔁 MIRROR KE SOCIAL STREAM NINJA -->
 <iframe
-  src="https://beta.socialstream.ninja/samplefeatured.html?session=2FRNffxYMu">
+    src="https://beta.socialstream.ninja/samplefeatured.html?session=2FRNffxYMu">
 </iframe>
 
 </body>
 </html>
-
