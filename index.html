@@ -1,56 +1,711 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruang Visual Chat Overlay</title>
-
-    <!-- FONT -->
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-    <!-- SS Ninja helper -->
-    <script src="https://socialstream.ninja/libs/colours.js"></script>
-
-    <!-- 🔥 CSS INJECTION LOGIC (INI KUNCINYA) -->
-    <script>
-    (function () {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has("css")) {
-            const link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.type = "text/css";
-            link.href = params.get("css");
-            document.head.appendChild(link);
-            console.log("External CSS loaded:", link.href);
-        }
-    })();
-    </script>
-
-    <!-- DEFAULT STYLE (boleh minimal, akan dioverride CSS GitHub) -->
+<!-- saved from url=(0070)https://beta.socialstream.ninja/samplefeatured.html?session=2FRNffxYMu -->
+<html lang="en"><script src="chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon/content/location/location.js" id="eppiocemhmnlbhjplcgkofciiegomcon"></script><script src="chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon/libs/extend-native-history-api.js"></script><script src="chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon/libs/requests.js"></script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Social Stream - Overlay</title>
+    <meta name="title" content="Social Stream - Overlay">
+    <link rel="icon" href="https://beta.socialstream.ninja/favicon.ico">
+    <link rel="preload" href="https://beta.socialstream.ninja/thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="">
+    <meta name="robots" content="noindex">
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+		/* Variables */
+		:root {
+			--primary-gradient: linear-gradient(135deg, rgba(46,49,146,0.9), rgba(87,37,117,0.9));
+			--chat-bg: rgba(23, 25, 35, 0.85);
+			--border-color: rgba(255,255,255,0.1);
+			--text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			--animation-timing: 0.3s ease-out;
+		}
+
+		/* Base Styles */
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+			font-size: 16px;
+			line-height: 1.5;
+			color: #fff;
+			text-shadow: var(--text-shadow);
+			background-color: transparent;
+		}
+
+		/* Layout */
+		.output {
+			position: fixed;
+			bottom: 2rem;
+			left: 50%;
+			transform: translateX(-50%);
+			max-width: min(90vw, 600px);
+			width: 100%;
+		}
+
+		/* Chat Container */
+		.highlight-chat {
+			background: var(--chat-bg);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			border-radius: 12px;
+			padding: 1.2rem 1.5rem 2rem 1.5rem;
+			position: relative;
+			border: 1px solid var(--border-color);
+			box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+			animation: slideUp var(--animation-timing);
+		}
+
+		.highlight-chat.dono {
+			background: var(--primary-gradient);
+		}
+
+		/* Header Elements */
+		.hl-title {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			align-items: center;
+			gap: 0.75rem;
+			margin-bottom: 0.75rem;
+		}
+
+		.hl-img {
+			flex-shrink: 0;
+		}
+
+		.hl-profile-pic {
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			border: 2px solid var(--border-color);
+			object-fit: cover;
+			display: block;
+		}
+
+		.hl-name {
+			font-size: 1.125rem;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: 12px;
+			font-size: 150%;
+		}
+
+		/* Badges and Icons */
+		.hl-badges {
+			display: inline-flex;
+			gap: 0.25rem;
+			align-items: center;
+		}
+
+		.hl-badge {
+			width: 20px;
+			height: 20px;
+			object-fit: contain;
+		}
+
+		.icon.sourcetype {
+			position: absolute;
+			top: 1rem;
+			right: 1rem;
+			width: 24px;
+			height: 24px;
+			opacity: 0.7;
+			transition: opacity var(--animation-timing);
+		}
+
+		.icon.sourcetype:hover {
+			opacity: 1;
+		}
+
+		/* Message Content */
+		.hl-message {
+			font-size: 1rem;
+			line-height: 1.6;
+			word-break: break-word;
+			overflow-wrap: break-word;
+			hyphens: auto;
+			margin-left: calc(48px + 1.5rem);
+		}
+
+		.hl-message img {
+			max-height: 24px;
+		}
+
+		.hl-donation {
+			margin-left: 20px;
+			font-weight: 700;
+			color: #FFD700;
+			padding: 0.25rem 0.75rem;
+			background: rgba(255,255,255,0.1);
+			border-radius: 1rem;
+		}
+
+		/* Media Content */
+		.hl-imgContent {
+			margin-top: 1rem;
+			border-radius: 8px;
+			overflow: hidden;
+			max-width: 100%;
+		}
+
+		.hl-imgContent img,
+		.hl-imgContent video {
+			max-width: 100%;
+			height: auto;
+			display: block;
+			border-radius: 8px;
+		}
+
+		/* Animations */
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.fade {
+			transition: opacity var(--animation-timing);
+			opacity: 1;
+			will-change: opacity;
+		}
+
+		.fade.hidden {
+			opacity: 0;
+		}
+
+		/* IFrame */
+		#frame1 {
+			width: 0;
+			height: 0;
+			position: fixed;
+			left: -100px;
+			top: -100px;
+			border: 0;
+			pointer-events: none;
+		}
+
+		/* Accessibility */
+		@media (prefers-reduced-motion: reduce) {
+			.highlight-chat {
+				animation: none;
+			}
+			
+			.fade {
+				transition: none;
+			}
+		}
     </style>
-</head>
-<body>
+<script bis_use="true" type="text/javascript" charset="utf-8" data-bis-config="[&quot;facebook.com/&quot;,&quot;twitter.com/&quot;,&quot;youtube-nocookie.com/embed/&quot;,&quot;//vk.com/&quot;,&quot;//www.vk.com/&quot;,&quot;linkedin.com/&quot;,&quot;//www.linkedin.com/&quot;,&quot;//instagram.com/&quot;,&quot;//www.instagram.com/&quot;,&quot;//www.google.com/recaptcha/api2/&quot;,&quot;//hangouts.google.com/webchat/&quot;,&quot;//www.google.com/calendar/&quot;,&quot;//www.google.com/maps/embed&quot;,&quot;spotify.com/&quot;,&quot;soundcloud.com/&quot;,&quot;//player.vimeo.com/&quot;,&quot;//disqus.com/&quot;,&quot;//tgwidget.com/&quot;,&quot;//js.driftt.com/&quot;,&quot;friends2follow.com&quot;,&quot;/widget&quot;,&quot;login&quot;,&quot;//video.bigmir.net/&quot;,&quot;blogger.com&quot;,&quot;//smartlock.google.com/&quot;,&quot;//keep.google.com/&quot;,&quot;/web.tolstoycomments.com/&quot;,&quot;moz-extension://&quot;,&quot;chrome-extension://&quot;,&quot;/auth/&quot;,&quot;//analytics.google.com/&quot;,&quot;adclarity.com&quot;,&quot;paddle.com/checkout&quot;,&quot;hcaptcha.com&quot;,&quot;recaptcha.net&quot;,&quot;2captcha.com&quot;,&quot;accounts.google.com&quot;,&quot;www.google.com/shopping/customerreviews&quot;,&quot;buy.tinypass.com&quot;,&quot;gstatic.com&quot;,&quot;secureir.ebaystatic.com&quot;,&quot;docs.google.com&quot;,&quot;contacts.google.com&quot;,&quot;github.com&quot;,&quot;mail.google.com&quot;,&quot;chat.google.com&quot;,&quot;audio.xpleer.com&quot;,&quot;keepa.com&quot;,&quot;static.xx.fbcdn.net&quot;,&quot;sas.selleramp.com&quot;,&quot;1plus1.video&quot;,&quot;console.googletagservices.com&quot;,&quot;//lnkd.demdex.net/&quot;,&quot;//radar.cedexis.com/&quot;,&quot;//li.protechts.net/&quot;,&quot;challenges.cloudflare.com/&quot;,&quot;ogs.google.com&quot;]" data-dynamic-id="626373c5-7211-4ec8-bbc1-de2dbd10d179" src="chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon/executors/traffic.js"></script><style id="fusion-selection-styles">
+  .fusion-element-highlight {
+    outline: 2px solid #6366f1 !important;
+    outline-style: solid !important;
+  }
+  
+  .fusion-element-selected {
+    outline: 5px solid #10b981 !important;
+    outline-style: solid !important;
+    outline-offset: 3px !important;
+    animation: fusion-selected-pulse 2s ease-in-out infinite !important;
+  }
+  
+  @keyframes fusion-selected-pulse {
+    0% { 
+      outline-color: #10b981 !important;
+      outline-width: 5px !important;
+      outline-offset: 3px !important;
+    }
+    50% { 
+      outline-color: #059669 !important;
+      outline-width: 6px !important;
+      outline-offset: 4px !important;
+    }
+    100% { 
+      outline-color: #10b981 !important;
+      outline-width: 5px !important;
+      outline-offset: 3px !important;
+    }
+  }
+  
+  .fusion-selection-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    z-index: 2147483647 !important;
+    cursor: crosshair !important;
+    pointer-events: none !important;
+  }
+  
+  .fusion-selection-tooltip {
+    position: fixed !important;
+    background: #1f2937 !important;
+    color: white !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    z-index: 2147483648 !important;
+    pointer-events: none !important;
+    transform: translate(-50%, -100%) translateY(-10px) !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .fusion-selection-tooltip::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border: 5px solid transparent !important;
+    border-top-color: #1f2937 !important;
+  }
+  
+  
+  @keyframes fusion-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fusion-label-bounce {
+    0% { 
+      opacity: 0;
+      transform: translateY(-10px) scale(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(0) scale(1.05);
+    }
+    100% { 
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+</style></head>
+<body __processed_1b96a697-9283-44a2-b246-ed927e91b933__="true" bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6ImVwcGlvY2VtaG1ubGJoanBsY2drb2ZjaWllZ29tY29uIiwiYWRibG9ja2VyU3RhdHVzIjp7IkRJU1BMQVkiOiJlbmFibGVkIiwiRkFDRUJPT0siOiJlbmFibGVkIiwiVFdJVFRFUiI6ImVuYWJsZWQiLCJSRURESVQiOiJlbmFibGVkIiwiUElOVEVSRVNUIjoiZW5hYmxlZCIsIklOU1RBR1JBTSI6ImVuYWJsZWQiLCJUSUtUT0siOiJkaXNhYmxlZCIsIkxJTktFRElOIjoiZW5hYmxlZCIsIkNPTkZJRyI6ImRpc2FibGVkIn0sInZlcnNpb24iOiIyLjAuMzgiLCJzY29yZSI6MjAwMzgwfV0=">
+    <div id="output" class="output" bis_skin_checked="1">
+                <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="tiktok" bis_skin_checked="1">
+					<div class="hl-title" bis_skin_checked="1">
+					
+                <div class="hl-img" bis_skin_checked="1">
+                    <img id="img_48326" src="./Social Stream - Overlay_files/f8d0224883b970c3115ce5a371bbaaca~tplv-tiktokx-cropcenter_100_100.webp" class="hl-profile-pic" onerror="App.errorImage(this)">
+                </div>
+                    <div class="hl-name" style="background-color: #101739; color:#009dff;" id="nameDIV" bis_skin_checked="1">
+                        monchess_
+                    </div>
+					<div class="hl-badges" bis_skin_checked="1"><img class="hl-badge" src="./Social Stream - Overlay_files/new_top_gifter_version_2.png~tplv-obj.image"></div>
+					</div>
+                    <div id="message" class="hl-message" bis_skin_checked="1">kak, saran sepatu yg enteng dong. aku beli massive ternyata berat</div>
+                   
+                <img src="./Social Stream - Overlay_files/tiktok.png" class="icon sourcetype" data-icon-name="tiktok" onerror="this.style.display=&#39;none&#39;">
+                </div>
+            </div>
+    <script>
+	const urlParams = new URLSearchParams(window.location.search);
+	
+    const App = {
+        config: {
+            serverURL: (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja'),
+            maxReconnectAttempts: 10,
+            reconnectDelay: 100,
+            roomIdMaxLength: 80
+        },
 
-<!-- 🔁 MIRROR KE SOCIAL STREAM NINJA -->
-<iframe
-    src="https://beta.socialstream.ninja/samplefeatured.html?session=2FRNffxYMu">
-</iframe>
+        state: {
+            socketserver: null,
+            reconnectionTimeout: null,
+            conCon: 1,
+            roomID: 'test',
+            password: 'false',
+            fallbackImage: null,
+            fallbackImageAnnouncement: null
+        },
 
-</body>
-</html>
+        init() {
+            this.setupUrlParams();
+            this.setupFallbackImages();
+            this.initializeConnection();
+        },
+
+        initializeConnection() {
+            if (urlParams.has('server')) {
+                this.config.serverURL = urlParams.get('server') || this.config.serverURL;
+                this.setupSocket();
+            } else if (urlParams.has('server2')) {
+                this.config.serverURL = urlParams.get('server2') || this.config.serverURL;
+                this.setupSocket(1);
+            } else if (urlParams.has('server3')) {
+                this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
+                this.setupSocket(2);
+            } else {
+                this.setupRecvDataWindow();
+            }
+        },
+
+        setupUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.handleRoomIdParam(urlParams);
+            this.handlePasswordParam(urlParams);
+            this.handleServerParam(urlParams);
+
+            if (urlParams.has('savetodisk')) {
+                document.body.onclick = () => this.overwriteFile('setup');
+            }
+        },
+
+        handlePasswordParam(urlParams) {
+            this.state.password = urlParams.get('password') || 'false';
+        },
+
+        handleServerParam(urlParams) {
+            if (urlParams.has('server')) {
+                this.config.serverURL = urlParams.get('server') || this.config.serverURL;
+            } else if (urlParams.has('server2')) {
+                this.config.serverURL = urlParams.get('server2') || this.config.serverURL;
+            } else if (urlParams.has('server3')) {
+                this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
+            }
+        },
+
+        setupRecvDataWindow() {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${this.state.password}&notmobile&salt=vdo.ninja&label=overlay&exclude=${this.state.roomID}&scene&novideo&noaudio&cleanoutput&room=${this.state.roomID}`;
+            iframe.id = 'frame1';
+            iframe.allow = 'midi;geolocation;microphone;';
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', (e) => {
+                if (e.source !== iframe.contentWindow) return;
+                
+				if (e.data?.dataReceived && ("overlayNinja" in e.data.dataReceived)){
+					if ( e.data.dataReceived.overlayNinja){
+						this.processData({ contents: e.data.dataReceived.overlayNinja });
+					} else {
+						 this.processData(false);
+					}
+				}
+            });
+        },
+
+        handleRoomIdParam(urlParams) {
+            let roomID = urlParams.get('session') || 
+                        urlParams.get('s') || 
+                        urlParams.get('id');
+
+            if (!roomID && window.location.protocol === 'file:') {
+                roomID = prompt('Enter your session ID here, or add it to the URL.');
+            } else if (!roomID) {
+                window.location.href = 'https://socialstream.ninja/landing';
+                return;
+            }
+
+            const validatedID = this.validateRoomId(roomID);
+            if (!validatedID) {
+                this.handleInvalidRoom();
+                return;
+            }
+
+            this.state.roomID = validatedID;
+        },
+
+        setupFallbackImages() {
+            this.state.fallbackImage = new Image();
+            this.state.fallbackImage.src = './sources/images/unknown.png';
+            this.state.fallbackImage.onerror = () => this.state.fallbackImage = null;
+
+            this.state.fallbackImageAnnouncement = new Image();
+            this.state.fallbackImageAnnouncement.src = './icons/announcement.png';
+            this.state.fallbackImageAnnouncement.onerror = () => this.state.fallbackImageAnnouncement = null;
+        },
+
+        validateRoomId(roomId) {
+            if (!roomId?.trim()) return false;
+
+            let sanitizedId = String(roomId).trim();
+            if (sanitizedId.length < 2) return false;
+
+            const reservedValues = [
+                'undefined', 'null', 'false', 'true', 'NaN',
+                'default', 'room', 'lobby', 'test', 'nothing',
+                '0', '1', 'none'
+            ];
+
+            if (reservedValues.includes(sanitizedId.toLowerCase())) return false;
+
+            sanitizedId = sanitizedId.replace(/[^a-zA-Z0-9]/g, '_');
+            if (/^_+$/.test(sanitizedId)) return false;
+            
+            return sanitizedId.length <= this.config.roomIdMaxLength ? sanitizedId : false;
+        },
+
+        handleInvalidRoom() {
+            document.write('Invalid session ID');
+            throw new Error('Invalid session ID');
+        },
+
+        setupSocket(allin = false) {
+            if (this.state.reconnectionTimeout) {
+                clearTimeout(this.state.reconnectionTimeout);
+                this.state.reconnectionTimeout = null;
+            }
+
+            if (this.state.socketserver) {
+                this.state.socketserver.onclose = null;
+                this.state.socketserver.close();
+            }
+
+            this.state.socketserver = new WebSocket(this.config.serverURL);
+            this.initializeSocketHandlers(allin);
+        },
+
+        initializeSocketHandlers(allin) {
+            const socket = this.state.socketserver;
+
+            socket.onclose = () => {
+                if (this.state.conCon <= this.config.maxReconnectAttempts) {
+                    this.state.reconnectionTimeout = setTimeout(() => {
+                        this.state.conCon++;
+                        this.setupSocket(allin);
+                    }, this.config.reconnectDelay * this.state.conCon);
+                }
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                socket.close();
+            };
+
+            socket.onopen = () => {
+                this.state.conCon = 1;
+                const message = {
+                    join: this.state.roomID,
+                    out: 3
+                };
+
+                if (allin === 2) {
+                    message.in = 2;
+                } else if (allin === 1) {
+                    message.in = 1;
+                }
+
+                socket.send(JSON.stringify(message));
+            };
+
+            socket.onmessage = this.handleSocketMessage.bind(this);
+        },
+
+        handleSocketMessage(event) {
+            if (!event.data) return;
+
+            let data;
+            try {
+                data = typeof event.data === 'object' ? event.data : JSON.parse(event.data);
+            } catch (error) {
+                console.error('Error parsing message:', error);
+                return;
+            }
+
+            const pid = data?.get || false;
+            if (data?.overlayNinja) {
+                data = data.overlayNinja;
+            }
+
+            const resp = this.processData(data);
+            if (resp !== null) {
+                const ret = {
+                    callback: {
+                        ...data,
+                        result: resp,
+                        get: pid
+                    }
+                };
+                this.state.socketserver.send(JSON.stringify(ret));
+            }
+        },
+
+        processData(data) {
+            if (!data || data === false || (data.contents && data.contents === false) || (data.content === false)) {
+                document.getElementById('output').innerHTML = '';
+                return true;
+            }
+
+            if (data.contents) {
+                const content = data.contents;
+                if (!content.chatmessage && !content.chatname && 
+                    !content.contentimg && !content.donation && 
+                    !content.hasDonation && !content.memebership && 
+                    !content.hasMembership) {
+                    return;
+                }
+                
+                this.showMessage(content);
+                return true;
+            }
+
+            return null;
+        },
+
+        errorImage(ele) {
+            if (ele.dataset.backupImage) {
+                ele.src = ele.dataset.backupImage;
+            } else if (this.state.fallbackImage) {
+                ele.src = './sources/images/unknown.png';
+            } else {
+                ele.style.display = 'none';
+            }
+        },
+
+        showMessage(data) {
+            const messageContent = this.buildMessageContent(data);
+            document.getElementById('output').innerHTML = messageContent;
+
+            if (data.hasDonation) {
+                document.getElementById('newmessage')?.classList.add('dono');
+            }
+
+            if (!data.chatname && !data.chatbadges) {
+                document.getElementById('nameDIV').style.display = 'none';
+            }
+
+            this.handleTwitchImage(data);
+        },
+
+        buildMessageContent(data) {
+            const imgContent = this.buildImageContent(data);
+            const avatarImg = this.buildAvatarImage(data);
+            const chatbadges = this.buildChatBadges(data.chatbadges);
+            const sourceType = this.buildSourceType(data.type);
+            const styleOverride = this.getStyleOverride(data);
+			const donationContent = this.buildDonation(data);
+
+            return `
+                <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
+					<div class="hl-title">
+					${avatarImg}
+                    <div class="hl-name" ${styleOverride} id="nameDIV">
+                        ${data.chatname || ''}
+                    </div>
+					${chatbadges}${donationContent}
+					</div>
+                    <div id="message" class="hl-message">${data.chatmessage || ''}</div>
+                   ${sourceType}${imgContent}
+                </div>
+            `;
+        },
+
+        buildImageContent(data) {
+            if (!data.contentimg) return '';
+
+            const isVideo = data.contentimg.includes('.mp4') || data.contentimg.includes('.webm');
+            const mediaElement = isVideo ? 
+                `<video loop="true" autoplay="true" muted="true" src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />` :
+                `<img src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />`;
+
+            return `<div class="hl-imgContent">${mediaElement}</div>`;
+        },
+
+        buildAvatarImage(data) {
+            const imgSrc = data.chatimg || (!data.chatname && data.event ? 
+                './icons/announcement.png' : './sources/images/unknown.png');
+
+            const backupAttr = data.backupChatimg ? 
+                `data-backup-image="${data.backupChatimg}"` : '';
+
+            return `
+                <div class="hl-img">
+                    <img id="img_${data.id}" 
+                         src="${imgSrc}" 
+                         class="hl-profile-pic" 
+                         ${backupAttr}
+                         onerror="App.errorImage(this)" />
+                </div>`;
+        },
+
+        buildChatBadges(badges) {
+            if (!badges?.length) return '';
+
+            const badgeElements = badges.map(badge => {
+                if (typeof badge === 'object') {
+                    if (badge.type === 'img' && badge.src) {
+                        return `<img class="hl-badge" src="${badge.src}" />`;
+                    } else if (badge.type === 'svg' && badge.html) {
+                        return `<span class="hl-badge">${badge.html}</span>`;
+                    }
+                } else {
+                    return `<img class="hl-badge" src="${badge}" />`;
+                }
+                return '';
+            }).join('');
+
+            return badgeElements ? `<div class="hl-badges">${badgeElements}</div>` : '';
+        },
+		
+		buildDonation(data) {
+            if (!(data.hasDonation || data.donation)) return '';
+
+            const donationAmount = (data.hasDonation || data.donation);
+            return `<div class="hl-donation">${donationAmount}</div>`;
+        },
+
+        buildSourceType(type = 'none') {
+            return `
+                <img src="./sources/images/${type}.png" 
+                     class="icon sourcetype" 
+                     data-icon-name="${type}" 
+                     onerror="this.style.display='none'" />`;
+        },
+
+        getStyleOverride(data) {
+            const styles = [];
+            
+            if (data.backgroundColor) {
+                styles.push(data.backgroundColor.startsWith('background-color:') ? 
+                    data.backgroundColor : `background-color: ${data.backgroundColor}`);
+            }
+            
+            if (data.nameColor) {
+                styles.push(`color: ${data.nameColor}`);
+            } else if (data.textNameColor) {
+                styles.push(data.textNameColor);
+            }
+            
+            return styles.length ? `style="${styles.join('; ')}"` : '';
+        },
+
+        handleTwitchImage(data) {
+            const username = data.username || data.chatname;
+            if (data.type !== 'twitch' || !username) return;
+
+            if (!data.chatimg || data.chatimg.startsWith('https://api.socialstream.ninja')) {
+                const twitchImage = new Image();
+                const imageUrl = `https://api.socialstream.ninja/twitch/large?username=${encodeURIComponent(username)}`;
+                
+                twitchImage.onload = () => {
+                    const imgElement = document.getElementById(`img_${data.id}`);
+                    if (imgElement) {
+                        imgElement.src = imageUrl;
+                    }
+                };
+                
+                twitchImage.src = imageUrl;
+            }
+        },
+
+        overwriteFile(type) {
+            console.log('Save to disk functionality:', type);
+        }
+    };
+
+    // Initialize the application when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+<script defer="" src="./Social Stream - Overlay_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;f9df9d8398a04c919ae1805f16563df5&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+<iframe src="./Social Stream - Overlay_files/saved_resource.html" id="frame1" allow="midi;geolocation;microphone;" bis_size="{&quot;x&quot;:-100,&quot;y&quot;:-100,&quot;w&quot;:0,&quot;h&quot;:0,&quot;abs_x&quot;:-100,&quot;abs_y&quot;:-100}" bis_id="fr_hcmbboyi0ko3d4k0ex3hbr" bis_depth="0" bis_chainid="1"></iframe></body></html>
