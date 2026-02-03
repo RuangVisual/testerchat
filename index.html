@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Overlay Ruang Visual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ICON -->
+<link rel="icon" sizes="32x32" href="/favicon.ico">
+<link rel="icon" sizes="192x192" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/favicon.ico">
+
+<style>
+/* ===== THEME ===== */
+:root {
+    --bg: #0b0b0f;
+    --card: #15151c;
+    --border: #262634;
+    --accent: #ffd41d;
+    --text: #ffffff;
+    --muted: #9a9ab0;
+}
+
+* { box-sizing: border-box }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(1200px 600px at top, #1b1b2b, var(--bg));
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== CARD ===== */
+.card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+
+h1 {
+    margin: 0 0 18px;
+    font-size: 22px;
+    text-align: center;
+}
+
+label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 16px;
+    display: block;
+}
+
+input, select, button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0f0f16;
+    color: var(--text);
+    font-size: 14px;
+}
+
+select option { background: #0f0f16 }
+
+button {
+    margin-top: 18px;
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+}
+
+button.secondary {
+    background: #232333;
+    color: #fff;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.hidden { display: none }
+
+.footer {
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+}
+
+/* ===== SPLASH ===== */
+#splash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(800px 400px at center, #14141d, #0b0b0f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 999999;
+}
+
+#splash.hide { display: none }
+
+/* TEXT ANIMATION */
+#splash h2 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 8px;
+    opacity: 0;
+    animation: titleIn 1.2s ease forwards;
+}
+
+#splash p {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #b6b6c9;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: subtitleIn 1.2s ease forwards;
+    animation-delay: .6s;
+}
+
+@keyframes titleIn {
+    to { opacity: 1; letter-spacing: 3px; }
+}
+
+@keyframes subtitleIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* PROGRESS BAR MODERN */
+.progress {
+    width: 240px;
+    height: 3px;
+    background: rgba(255,255,255,.15);
+    border-radius: 999px;
+    margin: 22px auto 0;
+    overflow: hidden;
+}
+
+.progress::before {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #ffd41d,
+        transparent
+    );
+    animation: loading 1.3s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== SPLASH ===== -->
+<div id="splash">
+    <div>
+        <h2>RUANG VISUAL</h2>
+        <p>Menyiapkan overlay terbaik untukmu</p>
+        <div class="progress"></div>
+    </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="card">
+
+    <h1>Overlay Ruang Visual</h1>
+
+    <!-- STEP 1 -->
+    <div id="step-login">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Masukkan password Akses kamu">
+        <button id="btnLogin">Masuk</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step-config" class="hidden">
+        <label>Session ID Social Stream Ninja</label>
+        <input id="session" placeholder="contoh: 2FRNffxXXu">
+
+        <label>Pilih Style Overlay</label>
+        <select id="theme"></select>
+
+        <button id="btnGenerate">Generate Overlay</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step-result" class="hidden">
+        <label>Overlay URL (paste ke TikTok / OBS)</label>
+        <input id="result" readonly>
+
+        <button class="secondary" id="btnCopy">Copy URL</button>
+        <button class="secondary" id="btnBack">← Ganti Style</button>
+    </div>
+
+    <div class="footer">
+        <a href="https://www.tiktok.com/@dailylife.emix">© Amik Ruang Visual</a>
+    </div>
+</div>
+
+<script>
+// ===== SPLASH AUTO HIDE =====
+setTimeout(() => {
+    document.getElementById("splash").classList.add("hide");
+}, 3000);
+
+// ===== CONFIG =====
+const AUTH_ENDPOINT =
+    "https://overlayruangvisual-auth.dailylife-ami.workers.dev";
+
+const passwordInput = document.getElementById("password");
+const sessionInput  = document.getElementById("session");
+const themeSelect   = document.getElementById("theme");
+const resultInput   = document.getElementById("result");
+
+const stepLogin  = document.getElementById("step-login");
+const stepConfig = document.getElementById("step-config");
+const stepResult = document.getElementById("step-result");
+
+const btnLogin    = document.getElementById("btnLogin");
+const btnGenerate = document.getElementById("btnGenerate");
+const btnCopy     = document.getElementById("btnCopy");
+const btnBack     = document.getElementById("btnBack");
+
+// ===== THEMES =====
+const THEMES = [
+ ["dynamic_island","Dynamic Island"],
+ ["dynamic_island_yellow","Dynamic Island Yellow"],
+ ["minimalist","Minimalist"],
+ ["minimalist_border_style_1","Minimalist Border Style 1"],
+ ["minimalist_border_style_2","Minimalist Border Style 2"],
+ ["black_purple","Black Purple"],
+ ["box_pic","Box Pic"],
+ ["comic_yellow","Comic Yellow"],
+ ["cute_purple","Cute Purple"],
+ ["elegant_popup_black","Elegant Popup Black"],
+ ["elegant_popup_white","Elegant Popup White"],
+ ["feminine_pink","Feminine Pink"],
+ ["feminine_windows","Feminine Windows"],
+ ["galaxy_purple","Galaxy Purple"],
+ ["iphone","iPhone"],
+ ["iphone_black","iPhone Black"],
+ ["mac_player_black","Mac Player Black"],
+ ["mac_player_white","Mac Player White"],
+ ["pixel_cartoon_8bit","Pixel Cartoon 8bit"],
+ ["tiktok","TikTok"],
+ ["tiktok_black","TikTok Black"]
+];
+
+THEMES.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t[0];
+    opt.textContent = t[1];
+    themeSelect.appendChild(opt);
+});
+
+// ===== LOGIN =====
+btnLogin.onclick = async () => {
+    btnLogin.disabled = true;
+    btnLogin.textContent = "Memeriksa...";
+
+    try {
+        const res = await fetch(AUTH_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: passwordInput.value })
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+            alert("Password salah");
+            btnLogin.disabled = false;
+            btnLogin.textContent = "Masuk";
+            return;
+        }
+
+        stepLogin.classList.add("hidden");
+        stepConfig.classList.remove("hidden");
+
+    } catch {
+        alert("Gagal terhubung ke server");
+    }
+
+    btnLogin.disabled = false;
+    btnLogin.textContent = "Masuk";
+};
+
+btnGenerate.onclick = () => {
+    if (!sessionInput.value.trim()) {
+        alert("Session ID belum diisi");
+        return;
+    }
+
+    resultInput.value =
+        location.origin +
+        `/overlay.html?session=${encodeURIComponent(sessionInput.value)}` +
+        `&theme=${encodeURIComponent(themeSelect.value)}`;
+
+    stepConfig.classList.add("hidden");
+    stepResult.classList.remove("hidden");
+};
+
+btnCopy.onclick = () => {
+    resultInput.select();
+    document.execCommand("copy");
+    alert("Overlay URL disalin");
+};
+
+btnBack.onclick = () => {
+    stepResult.classList.add("hidden");
+    stepConfig.classList.remove("hidden");
+    themeSelect.focus();
+};
+</script>
+
+</body>
+</html>
